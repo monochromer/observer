@@ -13,42 +13,37 @@
     'use strict';
 
     var exports = {},
-        events = {},
         splitter =  /\s+/;
 
     function on(types, fn, context) {
         var type;
+        var types = types.split(splitter);
+        var context = context || this;
+        this._events = this._events || {};
 
-        types = types.split(splitter);
-        type = types.pop();
-        context = context || this;
-
-        while (type) {
-            events[type] = events[type] || [];
-            events[type].push({
+        while (type = types.pop()) {
+            this._events[type] = this._events[type] || [];
+            this._events[type].push({
                 context: context,
                 callback: fn
             });
-            type = types.pop();
         }
 
         return this;
     };
 
     function off(types, fn) {
-        var type,
-            index;
+        if (!this._events) return;
 
-        types = types.split(splitter);
-        type = types.pop();
+        var type, index;
+        var types = types.split(splitter);
 
-        while (type && type in events) {
-            index = events[type].indexOf(fn);
-            events[type].splice(index, 1);
-            if(events[type].length === 0) {
-                delete events[type];
+        while ((type = types.pop()) && (type in this._events)) {
+            index = this._events[type].indexOf(fn);
+            this._events[type].splice(index, 1);
+            if(this._events[type].length === 0) {
+                delete this._events[type];
             }
-            type = types.pop();
         }
 
         return this;
@@ -68,22 +63,23 @@
     };
 
     function emit(types) {
-        var type, args, e,
-            subscription,
-            len;
+        if (!this._events) return;
+
+        var types, type, args, e,
+            subscription, len;
 
         types = types.split(splitter);
-        type = types.pop();
         args = Array.prototype.slice.call(arguments, 1);
 
-        while(type && (type in events)) {
-            e = events[type];
+        while((type = types.pop()) && (type in this._events)) {
+            e = this._events[type];
             for (len = e.length; len > 0; len -= 1) {
                 subscription = e[len - 1];
                 subscription.callback.apply(subscription.context, args);
             }
-            type = types.pop();
         }
+
+        return this;
     };
 
     exports.on = on;
