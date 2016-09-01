@@ -9,7 +9,7 @@ export default {
     off(type, fn) {
         let index, events = this._events[type];
         if (events && (index = events.indexOf(fn)) > -1) events.splice(index, 1);
-        if (this._events[type].length <= 0) delete this._events[type];
+        if (this._events[type].length === 0) delete this._events[type];
         return this;
     },
   
